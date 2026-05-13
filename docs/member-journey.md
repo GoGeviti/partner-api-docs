@@ -1,10 +1,10 @@
 # Member Journey
 
-The Partner API should expose one simple member journey even though Geviti's internal implementation spans several services.
+The Partner API should expose one simple member journey for partner members, admins, and practitioners.
 
 ## Journey Map
 
-| Stage | Member experience | Partner/admin experience | Public status |
+| Stage | Member experience | Partner/admin experience | Partner-visible status |
 | --- | --- | --- | --- |
 | Enrolled | Member has a profile in the partner program. | Admin can see member eligibility. | `active` |
 | Intake | Member completes health questions. | Admin can monitor completion. | `intake_required` or `completed` |
@@ -17,13 +17,13 @@ The Partner API should expose one simple member journey even though Geviti's int
 
 ## Status Philosophy
 
-Partner clients should not need to understand internal provider states. The Partner API should translate internal lab provider, upload, and care plan states into the public lifecycle above.
+Partner clients should build against the lifecycle above rather than lab vendor or operational details.
 
 ## Member-Facing Defaults
 
 - Members can see their own profile, intake status, lab order status, released lab results, and released care plans.
 - Members should not see draft care plans.
-- Members should not see internal notes or provider IDs.
+- Members should not see clinical review notes or lab vendor identifiers.
 - Lab result visibility before care plan release should be partner-configurable.
 
 ## Admin And Practitioner Defaults

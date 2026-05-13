@@ -27,15 +27,15 @@
 ## API Contract
 
 - Should the third-party API use OAuth client credentials, API keys, or both?
-- Does the public contract need FHIR-compatible resources, or only Geviti-native partner DTOs?
+- Do partners need healthcare-standard export formats, or only Geviti partner DTOs?
 - Do partners need bulk import endpoints for members?
 - Do partners need sandbox mode with fake lab states and webhook replay?
 - Which rate limits should apply per organization and per machine client?
 
-## Implementation
+## Build And Operations
 
-- Should Partner API be a new service or a module inside an existing backend?
-- Where should public-to-internal ID mappings live?
-- Which service owns webhook delivery and retry state?
-- Should care plan generation be called directly from Partner API or through an internal workflow queue?
-- How should WorkOS organization roles map to Geviti clinical roles?
+- What build path best supports a stable partner-facing contract?
+- Which team owns webhook delivery, retry behavior, and partner support?
+- What operational service levels should partners expect for lab status updates and care plan generation?
+- How should partner organization roles map to clinical review permissions?
+- What onboarding checklist should partners complete before production access?

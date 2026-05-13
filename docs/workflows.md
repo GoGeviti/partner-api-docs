@@ -28,7 +28,7 @@ sequenceDiagram
 1. Admin creates or selects a partner member.
 2. API verifies organization access, member eligibility, and required intake state.
 3. Admin creates a lab order with a supported `panel_code`.
-4. API creates the internal order and returns a public `labord_` ID.
+4. API creates the lab order and returns a `labord_` ID.
 5. Member or admin schedules the appointment.
 6. API sends webhooks as the order moves through scheduling, draw, processing, results, and review.
 
@@ -36,7 +36,7 @@ sequenceDiagram
 
 1. Member uploads a PDF through the Partner UI.
 2. API stores the upload under the partner and member.
-3. Internal processing extracts and normalizes results.
+3. Geviti processes the upload and normalizes results.
 4. API emits `lab_upload.processed` or `lab_upload.processing_failed`.
 5. If processing succeeds, a `labres_` resource is created.
 6. A care plan can be generated from that lab result.

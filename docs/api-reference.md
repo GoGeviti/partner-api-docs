@@ -6,7 +6,7 @@ Base URL:
 https://api.gogeviti.com/partner/v1
 ```
 
-This is a mock public contract. Names and payloads should be validated before implementation.
+This is a mock partner contract. Names and payloads should be validated before build.
 
 For the generated endpoint explorer, use the [full OpenAPI reference](https://geviti.gitbook.io/docs.gogeviti.com/reference).
 

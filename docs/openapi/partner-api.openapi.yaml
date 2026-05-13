@@ -2,16 +2,16 @@ openapi: 3.1.0
 info:
   title: Geviti Partner API
   version: 0.1.0
-  summary: Draft public facade for partner member bloodwork and care plan workflows.
+  summary: Draft partner API for member bloodwork and care plan workflows.
   description: |
-    The Geviti Partner API is a proposed public facade for partner-led bloodwork and
+    The Geviti Partner API is a proposed partner-facing API for partner-led bloodwork and
     care plan workflows. It is designed for white-label partner experiences used by
     gyms, athletic departments, corporate wellness programs, and approved third-party
     integrations.
 
     Use this reference to understand the draft resource model, request shapes, and
     partner-safe lifecycle states. This is a mock documentation contract and should be
-    validated with product, clinical, compliance, and implementation teams before build.
+    validated with product, clinical, compliance, and partner teams before build.
 servers:
 - url: https://api.gogeviti.com/partner/v1
 security:
@@ -20,7 +20,7 @@ tags:
 - name: Start Here
   description: Confirm the current caller, selected organization, roles, and available partner capabilities.
 - name: Members
-  description: Enroll and manage partner-scoped members without exposing internal Geviti user or patient IDs.
+  description: Enroll and manage partner-scoped members with stable partner-facing IDs.
 - name: Intake
   description: Read the active health intake template and submit member responses.
 - name: Lab Ordering
@@ -256,7 +256,7 @@ paths:
       tags:
       - Lab Ordering
       summary: Get a lab order.
-      description: Returns the public lab order, appointment summary, and normalized lifecycle status.
+      description: Returns the partner lab order, appointment summary, and normalized lifecycle status.
       operationId: getLabOrder
       parameters:
       - "$ref": "#/components/parameters/LabOrderId"

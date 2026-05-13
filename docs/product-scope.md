@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create a public Partner API that supports a simplified, white-label version of Geviti's bloodwork and care plan experience for partner organizations.
+Create a Partner API that supports a simplified, white-label version of Geviti's bloodwork and care plan experience for partner organizations.
 
 The Partner API should support two clients:
 
@@ -32,12 +32,12 @@ The Partner API should support two clients:
 | Care plan review | Yes | Let approved partner practitioners review, modify, approve, and release plans. |
 | Webhooks | Yes | Notify partners of major status transitions. |
 
-## Out Of Scope For The First Public Contract
+## Out Of Scope For The First Partner Contract
 
-- Exposing raw internal EMR routes or raw FHIR resources.
-- Exposing Vital, AHA, Makor, or internal Geviti identifiers as primary public IDs.
+- Raw clinical records or low-level lab vendor payloads.
+- Vendor-specific order IDs as primary partner-facing IDs.
 - Subscription billing, supplement ordering, pharmacy workflows, or payments.
-- Full internal care hub parity.
+- Full clinical operations tooling.
 - Ad hoc partner-defined lab panels without clinical/product approval.
 - Cross-organization member search.
 - Aggregate reporting dashboards for employers or teams.
@@ -53,4 +53,4 @@ The Partner API should support two clients:
 
 ## Product Principle
 
-The API should present one clear partner journey even though Geviti's internal implementation spans member app services, backend services, EMR services, provider integrations, and care hub tooling.
+The API should present one clear partner journey across enrollment, intake, bloodwork, results, care plan review, and release.

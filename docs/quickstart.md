@@ -40,7 +40,7 @@ PUT /partner/v1/members/{member_id}/intake
 
 ## 4. Order Bloodwork
 
-Create a lab order for an approved panel. The order moves through a normalized public status model even when internal providers use different state names.
+Create a lab order for an approved panel. The order moves through a consistent partner-visible status model.
 
 ```json
 {
