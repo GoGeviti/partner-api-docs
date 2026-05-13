@@ -1,0 +1,7 @@
+.env*.local
+.superpowers/
+docs/superpowers/
+
+# Internal planning notes stay local unless intentionally published.
+docs/internal-mapping.md
+.superpowers/

@@ -1,0 +1,1525 @@
+openapi: 3.1.0
+info:
+  title: Geviti Partner API
+  version: 0.1.0
+  summary: Draft public facade for partner member bloodwork and care plan workflows.
+  description: |
+    The Geviti Partner API is a proposed public facade for partner-led bloodwork and
+    care plan workflows. It is designed for white-label partner experiences used by
+    gyms, athletic departments, corporate wellness programs, and approved third-party
+    integrations.
+
+    Use this reference to understand the draft resource model, request shapes, and
+    partner-safe lifecycle states. This is a mock documentation contract and should be
+    validated with product, clinical, compliance, and implementation teams before build.
+servers:
+- url: https://api.gogeviti.com/partner/v1
+security:
+- bearerAuth: []
+tags:
+- name: Start Here
+  description: Confirm the current caller, selected organization, roles, and available partner capabilities.
+- name: Members
+  description: Enroll and manage partner-scoped members without exposing internal Geviti user or patient IDs.
+- name: Intake
+  description: Read the active health intake template and submit member responses.
+- name: Lab Ordering
+  description: Create lab orders, schedule appointments, retrieve requisitions, and follow operational status.
+- name: Lab Results
+  description: Read normalized biomarker results or upload external bloodwork PDFs for processing.
+- name: Care Plans
+  description: Generate, review, approve, and release care plans for partner members.
+- name: Webhooks
+  description: Subscribe partner systems to status changes without polling every resource.
+x-tagGroups:
+- name: Getting started
+  tags:
+  - Start Here
+- name: Member journey
+  tags:
+  - Members
+  - Intake
+  - Lab Ordering
+  - Lab Results
+  - Care Plans
+- name: Integrations
+  tags:
+  - Webhooks
+paths:
+  "/me":
+    get:
+      tags:
+      - Start Here
+      summary: Identify the current caller.
+      description: Returns the authenticated user or machine client, selected organization, roles, and scopes.
+      operationId: getMe
+      responses:
+        '200':
+          description: Caller identity and permissions.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Me"
+  "/organization":
+    get:
+      tags:
+      - Start Here
+      summary: Get partner organization settings.
+      description: Returns enabled partner capabilities for the selected organization.
+      operationId: getOrganization
+      responses:
+        '200':
+          description: Selected organization.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Organization"
+  "/members":
+    get:
+      tags:
+      - Members
+      summary: List partner members.
+      description: Search or page through members scoped to the selected partner organization.
+      operationId: listMembers
+      parameters:
+      - "$ref": "#/components/parameters/Limit"
+      - "$ref": "#/components/parameters/Cursor"
+      - name: external_id
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Member list.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MemberList"
+    post:
+      tags:
+      - Members
+      summary: Create a partner member.
+      description: Creates or links a member profile for the partner. Use `external_id` for partner-side identity reconciliation.
+      operationId: createMember
+      parameters:
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateMemberRequest"
+      responses:
+        '201':
+          description: Created member.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Member"
+  "/members/{member_id}":
+    get:
+      tags:
+      - Members
+      summary: Get a member.
+      description: Returns a partner-safe member profile and high-level enrollment status.
+      operationId: getMember
+      parameters:
+      - "$ref": "#/components/parameters/MemberId"
+      responses:
+        '200':
+          description: Member.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Member"
+    patch:
+      tags:
+      - Members
+      summary: Update a member.
+      description: Updates allowed contact, demographic, or partner reference fields for a member.
+      operationId: updateMember
+      parameters:
+      - "$ref": "#/components/parameters/MemberId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UpdateMemberRequest"
+      responses:
+        '200':
+          description: Updated member.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Member"
+  "/intake-template":
+    get:
+      tags:
+      - Intake
+      summary: Get active intake template.
+      description: Returns the current health intake template configured for the selected partner.
+      operationId: getIntakeTemplate
+      responses:
+        '200':
+          description: Intake template.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/IntakeTemplate"
+  "/members/{member_id}/intake":
+    get:
+      tags:
+      - Intake
+      summary: Get member intake.
+      description: Returns the member's intake completion state and latest submitted response.
+      operationId: getMemberIntake
+      parameters:
+      - "$ref": "#/components/parameters/MemberId"
+      responses:
+        '200':
+          description: Intake response.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/IntakeResponse"
+    put:
+      tags:
+      - Intake
+      summary: Submit member intake.
+      description: Submits or replaces the member's intake response using the active template.
+      operationId: putMemberIntake
+      parameters:
+      - "$ref": "#/components/parameters/MemberId"
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SubmitIntakeRequest"
+      responses:
+        '200':
+          description: Intake response.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/IntakeResponse"
+  "/lab-orders":
+    get:
+      tags:
+      - Lab Ordering
+      summary: List lab orders.
+      description: Lists lab orders by member, lifecycle status, or cursor position.
+      operationId: listLabOrders
+      parameters:
+      - "$ref": "#/components/parameters/Limit"
+      - "$ref": "#/components/parameters/Cursor"
+      - name: member_id
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          "$ref": "#/components/schemas/LabOrderStatus"
+      responses:
+        '200':
+          description: Lab order list.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabOrderList"
+    post:
+      tags:
+      - Lab Ordering
+      summary: Create a lab order.
+      description: Starts a partner member's bloodwork journey for an approved panel.
+      operationId: createLabOrder
+      parameters:
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateLabOrderRequest"
+      responses:
+        '201':
+          description: Created lab order.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabOrder"
+  "/lab-orders/{lab_order_id}":
+    get:
+      tags:
+      - Lab Ordering
+      summary: Get a lab order.
+      description: Returns the public lab order, appointment summary, and normalized lifecycle status.
+      operationId: getLabOrder
+      parameters:
+      - "$ref": "#/components/parameters/LabOrderId"
+      responses:
+        '200':
+          description: Lab order.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabOrder"
+  "/lab-orders/{lab_order_id}/availability":
+    post:
+      tags:
+      - Lab Ordering
+      summary: Find appointment availability.
+      description: Finds available appointment slots near a member address for a schedulable lab order.
+      operationId: findLabAvailability
+      parameters:
+      - "$ref": "#/components/parameters/LabOrderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AvailabilityRequest"
+      responses:
+        '200':
+          description: Available appointment slots.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AvailabilityResponse"
+  "/lab-orders/{lab_order_id}/appointments":
+    post:
+      tags:
+      - Lab Ordering
+      summary: Book a lab appointment.
+      description: Books a selected appointment slot and moves the lab order into scheduled status.
+      operationId: bookLabAppointment
+      parameters:
+      - "$ref": "#/components/parameters/LabOrderId"
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BookAppointmentRequest"
+      responses:
+        '201':
+          description: Booked appointment.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabAppointment"
+  "/lab-orders/{lab_order_id}/cancel":
+    post:
+      tags:
+      - Lab Ordering
+      summary: Cancel a lab order.
+      description: Cancels a lab order when the provider and current state allow cancellation.
+      operationId: cancelLabOrder
+      parameters:
+      - "$ref": "#/components/parameters/LabOrderId"
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      responses:
+        '200':
+          description: Cancelled lab order.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabOrder"
+  "/lab-orders/{lab_order_id}/requisition":
+    get:
+      tags:
+      - Lab Ordering
+      summary: Get requisition PDF URL.
+      description: Returns a short-lived URL for the requisition PDF when one is available.
+      operationId: getLabRequisition
+      parameters:
+      - "$ref": "#/components/parameters/LabOrderId"
+      responses:
+        '200':
+          description: Short-lived PDF URL.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/FileUrl"
+  "/lab-results":
+    get:
+      tags:
+      - Lab Results
+      summary: List lab results.
+      description: Lists lab results visible to the caller based on organization, role, and release policy.
+      operationId: listLabResults
+      parameters:
+      - "$ref": "#/components/parameters/Limit"
+      - "$ref": "#/components/parameters/Cursor"
+      - name: member_id
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Lab result list.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabResultList"
+  "/lab-results/{lab_result_id}":
+    get:
+      tags:
+      - Lab Results
+      summary: Get a lab result.
+      description: Returns normalized biomarker results and status for a single lab result.
+      operationId: getLabResult
+      parameters:
+      - "$ref": "#/components/parameters/LabResultId"
+      responses:
+        '200':
+          description: Lab result.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabResult"
+  "/lab-results/{lab_result_id}/pdf":
+    get:
+      tags:
+      - Lab Results
+      summary: Get lab result PDF URL.
+      description: Returns a short-lived URL for the original or normalized lab result PDF.
+      operationId: getLabResultPdf
+      parameters:
+      - "$ref": "#/components/parameters/LabResultId"
+      responses:
+        '200':
+          description: Short-lived PDF URL.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/FileUrl"
+  "/lab-results/uploads":
+    post:
+      tags:
+      - Lab Results
+      summary: Upload external bloodwork PDF.
+      description: Accepts an external bloodwork PDF and creates an asynchronous processing job.
+      operationId: uploadLabResultPdf
+      parameters:
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - member_id
+              - file
+              properties:
+                member_id:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: Upload accepted.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabUpload"
+  "/lab-results/uploads/{upload_id}":
+    get:
+      tags:
+      - Lab Results
+      summary: Get upload processing status.
+      description: Returns the current processing status for an uploaded bloodwork PDF.
+      operationId: getLabUpload
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Upload status.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LabUpload"
+  "/care-plans":
+    get:
+      tags:
+      - Care Plans
+      summary: List care plans.
+      description: Lists care plans by member or review lifecycle state.
+      operationId: listCarePlans
+      parameters:
+      - "$ref": "#/components/parameters/Limit"
+      - "$ref": "#/components/parameters/Cursor"
+      - name: member_id
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          "$ref": "#/components/schemas/CarePlanStatus"
+      responses:
+        '200':
+          description: Care plan list.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CarePlanList"
+  "/care-plans/generate":
+    post:
+      tags:
+      - Care Plans
+      summary: Generate a care plan.
+      description: Starts asynchronous care plan generation from a lab result or processed upload.
+      operationId: generateCarePlan
+      parameters:
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/GenerateCarePlanRequest"
+      responses:
+        '202':
+          description: Care plan generation accepted.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CarePlan"
+  "/care-plans/{care_plan_id}":
+    get:
+      tags:
+      - Care Plans
+      summary: Get a care plan.
+      description: Returns a care plan using the caller's visibility rules. Drafts are practitioner-visible only.
+      operationId: getCarePlan
+      parameters:
+      - "$ref": "#/components/parameters/CarePlanId"
+      responses:
+        '200':
+          description: Care plan.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CarePlan"
+    patch:
+      tags:
+      - Care Plans
+      summary: Modify a draft care plan.
+      description: Updates draft care plan sections before approval and release.
+      operationId: updateCarePlan
+      parameters:
+      - "$ref": "#/components/parameters/CarePlanId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UpdateCarePlanRequest"
+      responses:
+        '200':
+          description: Updated care plan.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CarePlan"
+  "/care-plans/{care_plan_id}/approve":
+    post:
+      tags:
+      - Care Plans
+      summary: Approve a care plan.
+      description: Records practitioner approval for a reviewed care plan.
+      operationId: approveCarePlan
+      parameters:
+      - "$ref": "#/components/parameters/CarePlanId"
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CarePlanActionRequest"
+      responses:
+        '200':
+          description: Approved care plan.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CarePlan"
+  "/care-plans/{care_plan_id}/release":
+    post:
+      tags:
+      - Care Plans
+      summary: Release a care plan to the member.
+      description: Makes an approved care plan visible to the partner member.
+      operationId: releaseCarePlan
+      parameters:
+      - "$ref": "#/components/parameters/CarePlanId"
+      - "$ref": "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CarePlanActionRequest"
+      responses:
+        '200':
+          description: Released care plan.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CarePlan"
+  "/webhook-endpoints":
+    get:
+      tags:
+      - Webhooks
+      summary: List webhook endpoints.
+      description: Lists configured webhook endpoints for the selected partner organization.
+      operationId: listWebhookEndpoints
+      responses:
+        '200':
+          description: Webhook endpoint list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/WebhookEndpoint"
+    post:
+      tags:
+      - Webhooks
+      summary: Create webhook endpoint.
+      description: Registers a partner-owned URL for selected Partner API events.
+      operationId: createWebhookEndpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateWebhookEndpointRequest"
+      responses:
+        '201':
+          description: Created webhook endpoint.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/WebhookEndpoint"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+    MemberId:
+      name: member_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^mem_[A-Za-z0-9]+$"
+    LabOrderId:
+      name: lab_order_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^labord_[A-Za-z0-9]+$"
+    LabResultId:
+      name: lab_result_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^labres_[A-Za-z0-9]+$"
+    CarePlanId:
+      name: care_plan_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^cp_[A-Za-z0-9]+$"
+  schemas:
+    Me:
+      type: object
+      required:
+      - id
+      - organization_id
+      - roles
+      - scopes
+      properties:
+        id:
+          type: string
+        organization_id:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        scopes:
+          type: array
+          items:
+            type: string
+      example:
+        id: user_01JZK4VYV1H5XCE4B5R8VYQ8C2
+        organization_id: org_01JZK4E1NDX1Z3G35C3R8A9JRF
+        roles:
+        - partner_admin
+        scopes:
+        - partner:read
+        - members:read
+        - labs:order
+        - labs:read
+    Organization:
+      type: object
+      required:
+      - id
+      - name
+      - capabilities
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      example:
+        id: org_01JZK4E1NDX1Z3G35C3R8A9JRF
+        name: Valley Performance Lab
+        capabilities:
+        - member_enrollment
+        - bloodwork_ordering
+        - care_plan_review
+    Address:
+      type: object
+      required:
+      - line1
+      - city
+      - region
+      - postal_code
+      - country
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        region:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+          default: US
+      example:
+        line1: 100 Training Center Way
+        city: Phoenix
+        region: AZ
+        postal_code: '85004'
+        country: US
+    Member:
+      type: object
+      required:
+      - id
+      - email
+      - first_name
+      - last_name
+      - status
+      - created_at
+      properties:
+        id:
+          type: string
+        external_id:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        sex_at_birth:
+          type: string
+          enum:
+          - female
+          - male
+          - intersex
+          - unknown
+        phone:
+          type: string
+        address:
+          "$ref": "#/components/schemas/Address"
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+          - invited
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        external_id: athlete-2048
+        email: jordan@example.edu
+        first_name: Jordan
+        last_name: Lee
+        date_of_birth: '2001-05-12'
+        sex_at_birth: female
+        phone: "+16025550100"
+        address:
+          line1: 100 Training Center Way
+          city: Phoenix
+          region: AZ
+          postal_code: '85004'
+          country: US
+        status: active
+        created_at: '2026-05-13T18:21:00Z'
+    CreateMemberRequest:
+      type: object
+      required:
+      - email
+      - first_name
+      - last_name
+      properties:
+        external_id:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        sex_at_birth:
+          type: string
+          enum:
+          - female
+          - male
+          - intersex
+          - unknown
+        phone:
+          type: string
+        address:
+          "$ref": "#/components/schemas/Address"
+      example:
+        external_id: athlete-2048
+        email: jordan@example.edu
+        first_name: Jordan
+        last_name: Lee
+        date_of_birth: '2001-05-12'
+        sex_at_birth: female
+        phone: "+16025550100"
+        address:
+          line1: 100 Training Center Way
+          city: Phoenix
+          region: AZ
+          postal_code: '85004'
+          country: US
+    UpdateMemberRequest:
+      type: object
+      properties:
+        external_id:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        address:
+          "$ref": "#/components/schemas/Address"
+      example:
+        phone: "+16025550199"
+        address:
+          line1: 120 Performance Drive
+          city: Tempe
+          region: AZ
+          postal_code: '85281'
+          country: US
+    MemberList:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Member"
+        next_cursor:
+          type: string
+      example:
+        data:
+        - id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+          external_id: athlete-2048
+          email: jordan@example.edu
+          first_name: Jordan
+          last_name: Lee
+          status: active
+          created_at: '2026-05-13T18:21:00Z'
+        next_cursor: cur_01JZK8GNJ4TE3D7MZNRHTE4D4A
+    IntakeTemplate:
+      type: object
+      required:
+      - id
+      - version
+      - questions
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        questions:
+          type: array
+          items:
+            type: object
+      example:
+        id: intake_template_partner_v1
+        version: 2026-05
+        questions:
+        - id: sleep_hours
+          label: Average sleep per night
+          type: number
+          required: true
+        - id: training_days
+          label: Training days per week
+          type: number
+          required: false
+    SubmitIntakeRequest:
+      type: object
+      required:
+      - template_id
+      - answers
+      properties:
+        template_id:
+          type: string
+        answers:
+          type: object
+          additionalProperties: true
+      example:
+        template_id: intake_template_partner_v1
+        answers:
+          sleep_hours: 7
+          training_days: 5
+          primary_goal: improve_recovery
+    IntakeResponse:
+      type: object
+      required:
+      - id
+      - member_id
+      - status
+      - submitted_at
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - not_started
+          - in_progress
+          - completed
+        submitted_at:
+          type: string
+          format: date-time
+      example:
+        id: intake_01JZK86ER7E5K7PK8GBKPX7GZP
+        member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        status: completed
+        submitted_at: '2026-05-13T18:22:00Z'
+    LabOrderStatus:
+      type: string
+      enum:
+      - intake_required
+      - ordered
+      - requisition_ready
+      - scheduling_required
+      - scheduled
+      - drawn
+      - processing
+      - results_ready
+      - care_plan_generating
+      - care_plan_review
+      - care_plan_released
+      - cancelled
+      - failed
+    CreateLabOrderRequest:
+      type: object
+      required:
+      - member_id
+      - panel_code
+      properties:
+        member_id:
+          type: string
+        panel_code:
+          type: string
+          enum:
+          - geviti_foundation
+        collection_mode:
+          type: string
+          enum:
+          - appointment
+          - walk_in
+        reason:
+          type: string
+          enum:
+          - initial_baseline
+          - follow_up
+          - practitioner_ordered
+      example:
+        member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        panel_code: geviti_foundation
+        collection_mode: appointment
+        reason: initial_baseline
+    LabOrder:
+      type: object
+      required:
+      - id
+      - member_id
+      - panel_code
+      - status
+      - created_at
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        panel_code:
+          type: string
+        status:
+          "$ref": "#/components/schemas/LabOrderStatus"
+        appointment:
+          "$ref": "#/components/schemas/LabAppointment"
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: labord_01JZK86VJ8ZQ2K0F5R9TQXJQW3
+        member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        panel_code: geviti_foundation
+        status: scheduled
+        appointment:
+          id: appt_01JZK8FQ9TEYAZ6VPR7WKCQXK5
+          starts_at: '2026-05-21T15:30:00Z'
+          ends_at: '2026-05-21T15:45:00Z'
+          status: scheduled
+          location:
+            line1: 200 Clinic Ave
+            city: Phoenix
+            region: AZ
+            postal_code: '85004'
+            country: US
+        created_at: '2026-05-13T18:24:00Z'
+    LabOrderList:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LabOrder"
+        next_cursor:
+          type: string
+      example:
+        data:
+        - id: labord_01JZK86VJ8ZQ2K0F5R9TQXJQW3
+          member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+          panel_code: geviti_foundation
+          status: scheduling_required
+          created_at: '2026-05-13T18:24:00Z'
+        next_cursor: cur_01JZK8HXQHVABX9GCKV4H7KM5A
+    AvailabilityRequest:
+      type: object
+      required:
+      - address
+      - from
+      - to
+      properties:
+        address:
+          "$ref": "#/components/schemas/Address"
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+      example:
+        address:
+          line1: 100 Training Center Way
+          city: Phoenix
+          region: AZ
+          postal_code: '85004'
+          country: US
+        from: '2026-05-20'
+        to: '2026-05-30'
+    AvailabilityResponse:
+      type: object
+      required:
+      - slots
+      properties:
+        slots:
+          type: array
+          items:
+            "$ref": "#/components/schemas/AvailabilitySlot"
+      example:
+        slots:
+        - slot_id: slot_01JZK8F1SN6MRS9KEQ2G6YSC7Y
+          starts_at: '2026-05-21T15:30:00Z'
+          ends_at: '2026-05-21T15:45:00Z'
+          location:
+            line1: 200 Clinic Ave
+            city: Phoenix
+            region: AZ
+            postal_code: '85004'
+            country: US
+    AvailabilitySlot:
+      type: object
+      required:
+      - slot_id
+      - starts_at
+      - ends_at
+      - location
+      properties:
+        slot_id:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        location:
+          "$ref": "#/components/schemas/Address"
+    BookAppointmentRequest:
+      type: object
+      required:
+      - slot_id
+      properties:
+        slot_id:
+          type: string
+      example:
+        slot_id: slot_01JZK8F1SN6MRS9KEQ2G6YSC7Y
+    LabAppointment:
+      type: object
+      required:
+      - id
+      - starts_at
+      - status
+      properties:
+        id:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - scheduled
+          - cancelled
+          - completed
+        location:
+          "$ref": "#/components/schemas/Address"
+    FileUrl:
+      type: object
+      required:
+      - url
+      - expires_at
+      properties:
+        url:
+          type: string
+          format: uri
+        expires_at:
+          type: string
+          format: date-time
+      example:
+        url: https://files.gogeviti.com/signed/labord_01JZK86VJ8ZQ2K0F5R9TQXJQW3/requisition.pdf
+        expires_at: '2026-05-13T19:24:00Z'
+    LabResult:
+      type: object
+      required:
+      - id
+      - member_id
+      - status
+      - biomarkers
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        lab_order_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - processing
+          - results_ready
+          - released
+        collected_at:
+          type: string
+          format: date-time
+        biomarkers:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Biomarker"
+      example:
+        id: labres_01JZKA5W3S76F6HFWGZZPAM4ZP
+        member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        lab_order_id: labord_01JZK86VJ8ZQ2K0F5R9TQXJQW3
+        status: results_ready
+        collected_at: '2026-05-21T15:45:00Z'
+        biomarkers:
+        - name: Vitamin D
+          value: 42
+          unit: ng/mL
+          reference_range: 30-100
+          flag: normal
+        - name: Ferritin
+          value: 18
+          unit: ng/mL
+          reference_range: 20-250
+          flag: low
+    Biomarker:
+      type: object
+      required:
+      - name
+      - value
+      - unit
+      properties:
+        name:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        reference_range:
+          type: string
+        flag:
+          type: string
+          enum:
+          - low
+          - normal
+          - high
+          - critical
+    LabResultList:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            "$ref": "#/components/schemas/LabResult"
+        next_cursor:
+          type: string
+      example:
+        data:
+        - id: labres_01JZKA5W3S76F6HFWGZZPAM4ZP
+          member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+          lab_order_id: labord_01JZK86VJ8ZQ2K0F5R9TQXJQW3
+          status: results_ready
+          collected_at: '2026-05-21T15:45:00Z'
+          biomarkers:
+          - name: Vitamin D
+            value: 42
+            unit: ng/mL
+            reference_range: 30-100
+            flag: normal
+        next_cursor: cur_01JZKA68KPB4KZQRXN2YQB0YME
+    LabUpload:
+      type: object
+      required:
+      - id
+      - member_id
+      - status
+      - created_at
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        status:
+          type: string
+          enum:
+          - accepted
+          - processing
+          - processed
+          - failed
+        lab_result_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      example:
+        id: upload_01JZK9NSS0KAHGH5CB61MK91TH
+        member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        status: processing
+        created_at: '2026-05-13T18:38:00Z'
+    CarePlanStatus:
+      type: string
+      enum:
+      - generating
+      - draft
+      - review_required
+      - approved
+      - released
+      - archived
+    GenerateCarePlanRequest:
+      type: object
+      required:
+      - member_id
+      properties:
+        member_id:
+          type: string
+        lab_result_id:
+          type: string
+        upload_id:
+          type: string
+      example:
+        member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        lab_result_id: labres_01JZKA5W3S76F6HFWGZZPAM4ZP
+    UpdateCarePlanRequest:
+      type: object
+      properties:
+        sections:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CarePlanSection"
+        review_note:
+          type: string
+      example:
+        sections:
+        - type: lifestyle
+          items:
+          - id: rec_01JZK92EXVFM0V2P28AKV8FZTX
+            title: Increase Zone 2 training
+            body: Add two 30 minute Zone 2 sessions per week.
+            status: active
+        review_note: Adjusted recommendations for in-season training load.
+    CarePlanActionRequest:
+      type: object
+      properties:
+        note:
+          type: string
+      example:
+        note: Reviewed and approved for release.
+    CarePlan:
+      type: object
+      required:
+      - id
+      - member_id
+      - status
+      - sections
+      - created_at
+      properties:
+        id:
+          type: string
+        member_id:
+          type: string
+        lab_result_id:
+          type: string
+        status:
+          "$ref": "#/components/schemas/CarePlanStatus"
+        sections:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CarePlanSection"
+        created_at:
+          type: string
+          format: date-time
+        released_at:
+          type: string
+          format: date-time
+      example:
+        id: cp_01JZKA8QKJDX7PVY64FGK4FFBC
+        member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+        lab_result_id: labres_01JZKA5W3S76F6HFWGZZPAM4ZP
+        status: review_required
+        sections:
+        - type: lifestyle
+          items:
+          - id: rec_01JZK92EXVFM0V2P28AKV8FZTX
+            title: Increase Zone 2 training
+            body: Add two 30 minute Zone 2 sessions per week.
+            status: active
+        - type: nutrition
+          items:
+          - id: rec_01JZK96Y2XH2DV1M71ZP2Q3JXJ
+            title: Increase iron-rich foods
+            body: Add two servings of iron-rich foods weekly and review ferritin on follow-up labs.
+            status: active
+        created_at: '2026-05-13T19:00:00Z'
+    CarePlanSection:
+      type: object
+      required:
+      - type
+      - items
+      properties:
+        type:
+          type: string
+          enum:
+          - lifestyle
+          - nutrition
+          - supplements
+          - goals
+          - disclaimers
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      example:
+        type: lifestyle
+        items:
+        - id: rec_01JZK92EXVFM0V2P28AKV8FZTX
+          title: Increase Zone 2 training
+          body: Add two 30 minute Zone 2 sessions per week.
+          status: active
+    CarePlanList:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CarePlan"
+        next_cursor:
+          type: string
+      example:
+        data:
+        - id: cp_01JZKA8QKJDX7PVY64FGK4FFBC
+          member_id: mem_01JZK7Q8MR5Y43TPXGT2P7C20C
+          lab_result_id: labres_01JZKA5W3S76F6HFWGZZPAM4ZP
+          status: review_required
+          sections:
+          - type: lifestyle
+            items:
+            - id: rec_01JZK92EXVFM0V2P28AKV8FZTX
+              title: Increase Zone 2 training
+              body: Add two 30 minute Zone 2 sessions per week.
+              status: active
+          created_at: '2026-05-13T19:00:00Z'
+        next_cursor: cur_01JZKAB3H9MZJH2HNGBRE5YWS8
+    CreateWebhookEndpointRequest:
+      type: object
+      required:
+      - url
+      - events
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+      example:
+        url: https://partner.example.com/webhooks/geviti
+        events:
+        - lab_order.scheduled
+        - lab_result.ready
+        - care_plan.released
+        description: Production partner webhook
+    WebhookEndpoint:
+      type: object
+      required:
+      - id
+      - url
+      - events
+      - status
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum:
+          - enabled
+          - disabled
+      example:
+        id: we_01JZKAA7ZMPWVCNT0AJ6H2C2S4
+        url: https://partner.example.com/webhooks/geviti
+        events:
+        - lab_order.scheduled
+        - lab_result.ready
+        - care_plan.released
+        status: enabled
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          - request_id
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            request_id:
+              type: string
