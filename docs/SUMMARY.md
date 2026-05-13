@@ -16,7 +16,7 @@
 * [API Reference](api-reference.md)
 * [Workflows](workflows.md)
 * [Webhooks](webhooks.md)
-* [Mock OpenAPI](openapi/partner-api.openapi.yaml)
+* [Endpoint Explorer](https://geviti.gitbook.io/docs.gogeviti.com/reference)
 
 ## Decisions
 

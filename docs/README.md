@@ -35,6 +35,6 @@ The first implementation should be narrow and boring on purpose: tenant-safe, au
 | [Member Journey](member-journey.md) | The public lifecycle partners and white-label UIs should build around. |
 | [Product Scope](product-scope.md) | What belongs in the partner product and what does not. |
 | [Auth And Tenancy](auth-and-tenancy.md) | Roles, scopes, organization resolution, and PHI visibility boundaries. |
-| [API Reference](api-reference.md) | Endpoint groups, examples, and the full OpenAPI contract. |
+| [API Reference](api-reference.md) | Endpoint groups, examples, and the full generated endpoint explorer. |
 
-The mock OpenAPI file is available at [openapi/partner-api.openapi.yaml](openapi/partner-api.openapi.yaml).
+The generated endpoint explorer is available at [Endpoint Explorer](https://geviti.gitbook.io/docs.gogeviti.com/reference).
